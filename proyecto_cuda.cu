@@ -32,48 +32,51 @@ int main(int argc, char** argv) {
         board[i] = 0;
         if (i/N < filas_con_fichas){
             if ((i/N)%2){
-                if (!(i%2)) board[i] = 1;
+                if (!(i%2)) board[i] = 2;
             }
             else{
-                if (i%2) board[i] = 1;
+                if (i%2) board[i] = 2;
             } 
         }
         else if (i/N > filas_con_fichas + 1){
             if (!(i/N%2)){
                 if (i%2){
-                    board[i] = 2;
+                    board[i] = 1;
                     n_fichas++;
                 } 
             }
             else{
                 if (!(i%2)){
                     n_fichas++;
-                    board[i] = 2;
+                    board[i] = 1;
                 }
             } 
         }
     }
-    board[33] = 1;
-    //Printeamos tablero para revisar si todo esta bien
-    printBoard(board, N);
-    Movimientos* movimientos = generarMovimientos(board, N, n_fichas);
-    for (int i = 0; i < movimientos -> length; i++){
-        printf("%d-%d\n",(movimientos -> listaMovimientos)[i].start_position,(movimientos -> listaMovimientos)[i].end_position);
+    board[24] = 1;
+    printBoard(board,N);
+    int turno_jugador = 2;
+    Movimientos* movimientos = generarMovimientos(board, N, n_fichas, turno_jugador);
+    for(int i = 0; i < movimientos->length; i++){
+        cout << movimientos->listaMovimientos[i].start_position << " " << movimientos->listaMovimientos[i].end_position << endl;
     }
+
+
     
     //Juego versión CPU
 
 
+    
 
-
-
-
-/*
     bool flag_finalizado = false;
+    int turno_jugador = 1; //turno_jugador 1 es del jugador
+    Movimientos* movimientos;
     while(!flag_finalizado){
         printBoard(board, N);
-        //Generar movimientos de jugador
+        movimientos = generarMovimientos(board, N, n_fichas, turno_jugador);
         //Permitir a jugador escoger movimientos
+
+        turno_jugador = (turno_jugador % 2) + 1;
 
         //Generar movimientos contrincante 
         //Escoger movimientos contrincante (IA)
@@ -85,7 +88,7 @@ int main(int argc, char** argv) {
 
 
 
-
+/*
     
 
 
