@@ -25,6 +25,7 @@ int main(int argc, char** argv) {
     int N = 8;
     int* board = new int[N*N];
     int n_fichas = 0;
+    srand(time(NULL));
     
     //Construccion de tablero inicial
     int filas_con_fichas = (N-2)/2;
@@ -53,48 +54,30 @@ int main(int argc, char** argv) {
             } 
         }
     }
-    board[24] = 1;
-    printBoard(board,N);
-    int turno_jugador = 2;
-    Movimientos* movimientos = generarMovimientos(board, N, n_fichas, turno_jugador);
-    for(int i = 0; i < movimientos->length; i++){
-        cout << movimientos->listaMovimientos[i].start_position << " " << movimientos->listaMovimientos[i].end_position << endl;
-    }
 
-
-    
-    //Juego versión CPU
-
-
-    
-
+    // Juego version CPU, IA random
     bool flag_finalizado = false;
     int turno_jugador = 1; //turno_jugador 1 es del jugador
     Movimientos* movimientos;
+    Move player_move;
+    Move IA_move;
     while(!flag_finalizado){
+        system("clear");
         printBoard(board, N);
         movimientos = generarMovimientos(board, N, n_fichas, turno_jugador);
-        //Permitir a jugador escoger movimientos
+        player_move = player_select_move(movimientos, N);
+        execute_movement(board, N, player_move);  
 
-        turno_jugador = (turno_jugador % 2) + 1;
+        turno_jugador = (turno_jugador % 2) + 1; 
 
-        //Generar movimientos contrincante 
-        //Escoger movimientos contrincante (IA)
-        //if (JuegoFinalizado()) flag_finalizado = true;
+        movimientos = generarMovimientos(board, N, n_fichas, turno_jugador);
+        IA_move = movimientos->listaMovimientos[rand() % movimientos->length]; //Por ahora random
+        execute_movement(board, N, IA_move);  
+
+        turno_jugador = (turno_jugador % 2) + 1; 
     }
-
-
-
-
-
-
-/*
     
-
-
-
-    
-    
+    /*
 	float dt;
 	int gs, bs = 256;
 	gs = (int)ceil((float) N*N/bs);
@@ -134,6 +117,5 @@ int main(int argc, char** argv) {
 
 	cudaFree(AinGPU); cudaFree(AoutGPU);
 	delete[] Ain;
-    
     */
 }

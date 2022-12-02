@@ -24,7 +24,15 @@ struct Movimientos{
 //Necesitaremos una función que transforme coordenadas de start_position/end_position en algo como A8
 
 void printBoard(int* board, int N){
+    cout << "   ";
+    for (int i = 0; i <= 2*N; i++){
+        if (i == N) cout << endl << "   ";
+        else if (i < N) cout << i << " ";
+        else if (i > N) cout << "- ";    
+    }
+    cout << endl;
     for (int j = 0; j < N; j++){
+        cout << j << "| ";
         for(int i = 0; i < N; i++){
             cout << board[i +  j*N] << " ";
         }
@@ -33,18 +41,54 @@ void printBoard(int* board, int N){
 }
 
 //Funcion de evaluación (o quizas se gana instantaneamente al llegar a la fila enemiga)
-float eval(int* board, int N){
+float eval(int *board, int N){
+    int one_fichas = 0;
+    int two_fichas = 0;
+    int diff = 0;
+    
+    for(int i = 0; i < N; i++){
+       for(int j = 0; j < N; j++){
+            if (board[i*N + j] == 2){
+                if(i == (N - 1)) return -2;
+                else two_fichas++;
+            }
+
+            else if (board[i*N + j] == 1) {
+                if(i == 0) return -1;
+                else one_fichas++;
+            }    
+       }  
+    }
+
+    diff = two_fichas - one_fichas;
+    if(diff > 0)  return 2 * diff; // El doble de la diferencia cuando se poseen mas fichas que el rival
+    else if (diff == 0) return 1;   // 1 cuando se empata en fichas
+    else return (1.0 * N / (N -  diff)); // Entre 0 y 1 cuando se pierde en fichas 
 
 }
 
-/*
-float player_select_move(Movimientos* movimientos){
-    cout << "Movimientos que puede realizar: " << endl,
+
+//Funcion que permite al jugador escoger su movimiento
+Move player_select_move(Movimientos* movimientos, int N){
+    cout << "Movimientos que puede realizar: " << endl;
     for(int i = 0; i < movimientos->length; i++){
-        printf("%d-%d",movimientos->listaMovimientos[i] );
-    }   
+        printf("%d: ", i+1);
+        printf("(%d-%d,",movimientos->listaMovimientos[i].start_position / N , movimientos->listaMovimientos[i].start_position % N);
+        printf("%d-%d)\n",movimientos->listaMovimientos[i].end_position / N ,movimientos->listaMovimientos[i].end_position % N);
+    }
+    int eleccion;
+    printf("Ingrese su eleccion: ");
+    scanf("%d",&eleccion);
+    return {movimientos->listaMovimientos[eleccion-1].start_position,movimientos->listaMovimientos[eleccion-1].end_position,movimientos->listaMovimientos[eleccion-1].kill};
 }
-*/
+
+//Función que ejecuta un movimiento sobre el tablero. Asume que el movimiento siempre es factible.
+void execute_movement(int* &board, int N, Move movimiento){
+    board[movimiento.end_position] = board[movimiento.start_position];
+    board[movimiento.start_position] = 0;
+    if (movimiento.kill != -1) board[movimiento.kill] = 0;
+}
+
 
 //Función que retorna una lista con movimientos
 Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliada){ //n_fichas (de 1 jugador) nos servirá para dejar de buscar cuando hayamos procesado todas las fichas
