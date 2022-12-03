@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cuda_runtime.h>
+//#include <cuda_runtime.h>
 #include <fstream>
 #include <time.h>
 #include <stdlib.h>
@@ -7,6 +7,7 @@
 
 using namespace std;
 
+/*
 __global__ void kernel(float* Ain, float* Aout, int M, int N, float deltax){
     int tid = threadIdx.x + blockDim.x * blockIdx.x;
     if (tid < M*N){
@@ -16,6 +17,8 @@ __global__ void kernel(float* Ain, float* Aout, int M, int N, float deltax){
     }
 }
 
+*/
+
 /* ----   Codigo Principal ---- */
  
 
@@ -24,36 +27,12 @@ int main(int argc, char** argv) {
     // Variables que trabajaremos 
     int N = 8;
     int* board = new int[N*N];
-    int n_fichas = 0;
+    int n_fichas_player = 0;
+    int n_fichas_rival = 0;
     srand(time(NULL));
     
     //Construccion de tablero inicial
-    int filas_con_fichas = (N-2)/2;
-    for (int i = 0; i < N*N; i++){
-        board[i] = 0;
-        if (i/N < filas_con_fichas){
-            if ((i/N)%2){
-                if (!(i%2)) board[i] = 2;
-            }
-            else{
-                if (i%2) board[i] = 2;
-            } 
-        }
-        else if (i/N > filas_con_fichas + 1){
-            if (!(i/N%2)){
-                if (i%2){
-                    board[i] = 1;
-                    n_fichas++;
-                } 
-            }
-            else{
-                if (!(i%2)){
-                    n_fichas++;
-                    board[i] = 1;
-                }
-            } 
-        }
-    }
+    build_board(board, N, &n_fichas_player, &n_fichas_rival);
 
     // Juego version CPU, IA random
     bool flag_finalizado = false;
@@ -64,15 +43,19 @@ int main(int argc, char** argv) {
     while(!flag_finalizado){
         system("clear");
         printBoard(board, N);
-        movimientos = generarMovimientos(board, N, n_fichas, turno_jugador);
+        movimientos = generarMovimientos(board, N, n_fichas_player, turno_jugador);
         player_move = player_select_move(movimientos, N);
-        execute_movement(board, N, player_move);  
+        freeMovimientos(movimientos);
 
+        execute_movement(board, N, player_move, &n_fichas_player);  
+
+        
         turno_jugador = (turno_jugador % 2) + 1; 
 
-        movimientos = generarMovimientos(board, N, n_fichas, turno_jugador);
+        movimientos = generarMovimientos(board, N, n_fichas_rival, turno_jugador);
         IA_move = movimientos->listaMovimientos[rand() % movimientos->length]; //Por ahora random
-        execute_movement(board, N, IA_move);  
+        execute_movement(board, N, IA_move, &n_fichas_rival); 
+        freeMovimientos(movimientos); 
 
         turno_jugador = (turno_jugador % 2) + 1; 
     }

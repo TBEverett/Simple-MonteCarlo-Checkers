@@ -21,7 +21,41 @@ struct Movimientos{
     int length; 
 };
 
-//Necesitaremos una función que transforme coordenadas de start_position/end_position en algo como A8
+
+void build_board(int* board, int N, int *n_fichas_player, int*n_fichas_rival){ 
+    int filas_con_fichas = (N-2)/2;
+    for (int i = 0; i < N*N; i++){
+        board[i] = 0;
+        if (i/N < filas_con_fichas){
+            if ((i/N)%2){
+                if (!(i%2)){
+                    *n_fichas_rival += 1;
+                    board[i] = 2;
+                } 
+            }
+            else{
+                if (i%2){
+                    *n_fichas_rival += 1;
+                    board[i] = 2;
+                } 
+            } 
+        }
+        else if (i/N > filas_con_fichas + 1){
+            if (!(i/N%2)){
+                if (i%2){
+                    board[i] = 1;
+                    *n_fichas_player += 1;
+                } 
+            }
+            else{
+                if (!(i%2)){
+                    board[i] = 1;
+                    *n_fichas_player += 1;
+                }
+            } 
+        }
+    }
+}
 
 void printBoard(int* board, int N){
     cout << "   ";
@@ -79,14 +113,18 @@ Move player_select_move(Movimientos* movimientos, int N){
     int eleccion;
     printf("Ingrese su eleccion: ");
     scanf("%d",&eleccion);
+    if (eleccion == 0) exit(1); //Para escapar del programa puede hacer un movimiento 0
     return {movimientos->listaMovimientos[eleccion-1].start_position,movimientos->listaMovimientos[eleccion-1].end_position,movimientos->listaMovimientos[eleccion-1].kill};
 }
 
 //Función que ejecuta un movimiento sobre el tablero. Asume que el movimiento siempre es factible.
-void execute_movement(int* &board, int N, Move movimiento){
+void execute_movement(int* &board, int N, Move movimiento, int* n_fichas){
     board[movimiento.end_position] = board[movimiento.start_position];
     board[movimiento.start_position] = 0;
-    if (movimiento.kill != -1) board[movimiento.kill] = 0;
+    if (movimiento.kill != -1){
+        board[movimiento.kill] = 0;
+        *n_fichas -= 1;
+    }
 }
 
 
@@ -95,10 +133,11 @@ Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliad
     int colum;
 
     int aux_numero_fichas = n_fichas;
-
-    Movimientos* movimientos = new Movimientos; //Acotamos la cantidad de movimientos (cantidad de fichas * 2)
-    movimientos -> listaMovimientos = new Move[n_fichas * 2];
+    Movimientos* movimientos = new Movimientos; 
+    movimientos -> listaMovimientos = new Move[n_fichas * 2]; //Acotamos la cantidad de movimientos (cantidad de fichas * 2)
     movimientos -> length = 0;
+
+
     int direccion_mov;
     int ficha_rival;
     if (ficha_aliada == 1){
@@ -176,4 +215,8 @@ Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliad
     return movimientos;
 }
 
-//Funcion que escoge un movimiento al azar
+
+void freeMovimientos(Movimientos* movimientos){
+    delete[] movimientos->listaMovimientos;
+    delete movimientos;
+}
