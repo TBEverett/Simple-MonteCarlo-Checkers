@@ -55,9 +55,7 @@ int main(int argc, char** argv) {
         movimientos = generarMovimientos(board, N, n_fichas_rival, turno_jugador);
         
         IA_move = movimientos->listaMovimientos[rand() % movimientos->length]; //Por ahora random
-        //IA_move = montecarloMove(board, N, n_fichas_player, n_fichas_rival, turno_jugador);
-
-        printf( "start pos: d%", IA_move.start_position);
+        //IA_move = montecarloMove(board, N, n_fichas_player, n_fichas_rival, turno_jugador); 
 
         execute_movement(board, N, IA_move, &n_fichas_rival); 
         freeMovimientos(movimientos); 
@@ -65,22 +63,22 @@ int main(int argc, char** argv) {
         turno_jugador = (turno_jugador % 2) + 1;
 
     
-      /*
+      
        ////////////////////////////////////////
-        if (eval(board,N) == -1){
+        if (win(board,N) == 1){
             printBoard(board, N);
             printf("Ha ganado el jugador 1");
             flag_finalizado = true;
             
         }
 
-        else if (eval(board,N) == -2){
+        else if (win(board,N) == 2){
             printBoard(board, N);
             printf("Ha ganado el jugador 2");
             flag_finalizado = false;
             
         }
-        */
+        
 
     }
         ///////////////////////////////////////

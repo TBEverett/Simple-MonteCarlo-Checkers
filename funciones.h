@@ -96,6 +96,7 @@ float eval(int *board, int N){
     }
     */
 
+//Funcion que retorna ganador
 int win(int *board, int N){
     for(int i = 0; i < N; i++){
        for(int j = 0; j < N; j++){
@@ -115,6 +116,7 @@ int win(int *board, int N){
 }
 
 
+//Funcion que evalua
 float eval(int *board, int N, int n_fichas_player, int n_fichas_rival){
     return n_fichas_player - n_fichas_rival;
 }
@@ -240,6 +242,10 @@ void freeMovimientos(Movimientos* movimientos){
 }
 
 
+
+// Montecarlo Funcion (Modificar)
+
+/*
 Move montecarloMove(int* board, int N, int fichas_player, int fichas_rival, int turno_jugador){
 
     float* points = new float[3];
@@ -304,9 +310,6 @@ Move montecarloMove(int* board, int N, int fichas_player, int fichas_rival, int 
                 execute_movement(boardCopy, N, IA_move, &n_fichas_rival); 
 
 
-
-            //  (select_move -> listaMovimientos)[movimientos -> length] = {i,i - 2 + 2*N*direccion_mov,i - 1 + N*direccion_mov};
-
                 value = eval(boardCopy, N, fichas_turno_rival, fichas_turno);
             
                 if (win(boardCopy,N) == 1){
@@ -351,3 +354,4 @@ Move montecarloMove(int* board, int N, int fichas_player, int fichas_rival, int 
 }
 
     
+*/
