@@ -1,5 +1,5 @@
 #include <iostream>
-//#include <cuda_runtime.h>
+#include <cuda_runtime.h>
 #include <fstream>
 #include <time.h>
 #include <stdlib.h>
@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
     int* board = new int[N*N];
     int n_fichas_player = 0;
     int n_fichas_IA = 0;
+    char letras[] = {'A','B','C','D','E','F','G','H','K','L','M','N'};
     srand(time(NULL));
     
     //Construccion de tablero inicial
@@ -69,16 +70,16 @@ int main(int argc, char** argv) {
         float eval_maxima = 0.;
         float eval_actual = 0.;
         for(int i = 0; i < movimientos->length; i++){
-            
+            //Este for hay que cambiar por un kernel
             for (int j = 0; j < NTHREADS; j++){
                 eval_actual += MonteCarloSimulation(board, N, movimientos->listaMovimientos[i], n_fichas_player, n_fichas_IA); //Simulacion en CPU de 1 solo hilo retornará -1 o 1  
             }
             
-            printf("(%d-%d,",movimientos->listaMovimientos[i].start_position / N , movimientos->listaMovimientos[i].start_position % N);
-            printf("%d-%d)",movimientos->listaMovimientos[i].end_position / N ,movimientos->listaMovimientos[i].end_position % N);
+            printf("(%c%d,",letras[movimientos->listaMovimientos[i].start_position / N ], movimientos->listaMovimientos[i].start_position % N);
+            printf("%c%d)",letras[movimientos->listaMovimientos[i].end_position / N ],movimientos->listaMovimientos[i].end_position % N);
             
             eval_actual = (eval_actual/NTHREADS) * 100;
-            printf("Evaluacion : %d%c\n ", (int) eval_actual, '%');
+            printf("Evaluacion : %d%c\n", (int) eval_actual, '%');
             if (eval_actual > eval_maxima){
                 indice_maximo = i;
                 eval_maxima = eval_actual;
@@ -143,4 +144,5 @@ int main(int argc, char** argv) {
 	cudaFree(AinGPU); cudaFree(AoutGPU);
 	delete[] Ain;
     */
+    
 }

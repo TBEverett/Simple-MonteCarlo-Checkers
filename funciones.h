@@ -58,6 +58,7 @@ void build_board(int* board, int N, int *n_fichas_player, int*n_fichas_rival){
 }
 
 void printBoard(int* board, int N){
+    char letras[] = {'A','B','C','D','E','F','G','H','K','L','M','N'};
     cout << "   ";
     for (int i = 0; i <= 2*N; i++){
         if (i == N) cout << endl << "   ";
@@ -66,7 +67,7 @@ void printBoard(int* board, int N){
     }
     cout << endl;
     for (int j = 0; j < N; j++){
-        cout << j << "| ";
+        cout << letras[j] << "| ";
         for(int i = 0; i < N; i++){
             cout << board[i +  j*N] << " ";
         }
@@ -94,12 +95,13 @@ float win(int *board, int N){
 
 
 //Funcion que permite al jugador escoger su movimiento
-Move player_select_move(Movimientos* movimientos, int N){ //Aqui se podria usar letras para las filas
+Move player_select_move(Movimientos* movimientos, int N){
+    char letras[] = {'A','B','C','D','E','F','G','H','K','L','M','N'};
     cout << "Movimientos que puede realizar: " << endl;
     for(int i = 0; i < movimientos->length; i++){
         printf("%d: ", i+1);
-        printf("(%d-%d,",movimientos->listaMovimientos[i].start_position / N , movimientos->listaMovimientos[i].start_position % N);
-        printf("%d-%d)\n",movimientos->listaMovimientos[i].end_position / N ,movimientos->listaMovimientos[i].end_position % N);
+        printf("(%c%d,", letras[movimientos->listaMovimientos[i].start_position / N] ,movimientos->listaMovimientos[i].start_position % N);
+        printf("%c%d)\n",letras[movimientos->listaMovimientos[i].end_position / N] ,movimientos->listaMovimientos[i].end_position % N);
     }
     int eleccion;
     printf("Ingrese su eleccion: ");

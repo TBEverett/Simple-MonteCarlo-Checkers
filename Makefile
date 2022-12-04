@@ -1,3 +1,3 @@
 all:
-	g++ proyecto.cpp -o proyecto
-	./proyecto
+	nvcc proyecto.cu -o proyecto
+	proyecto.exe
