@@ -75,6 +75,7 @@ void printBoard(int* board, int N){
 }
 
 //Funcion de evaluación (o quizas se gana instantaneamente al llegar a la fila enemiga)
+/*
 float eval(int *board, int N){
     int one_fichas = 0;
     int two_fichas = 0;
@@ -85,7 +86,7 @@ float eval(int *board, int N){
             if (board[i*N + j] == 2){
                 if(i == (N - 1)) return -2;
                 else two_fichas++;
-            }
+            
 
             else if (board[i*N + j] == 1) {
                 if(i == 0) return -1;
@@ -93,12 +94,29 @@ float eval(int *board, int N){
             }    
        }  
     }
+    */
 
-    diff = two_fichas - one_fichas;
-    if(diff > 0)  return 2 * diff; // El doble de la diferencia cuando se poseen mas fichas que el rival
-    else if (diff == 0) return 1;   // 1 cuando se empata en fichas
-    else return (1.0 * N / (N -  diff)); // Entre 0 y 1 cuando se pierde en fichas 
+int win(int *board, int N){
+    for(int i = 0; i < N; i++){
+       for(int j = 0; j < N; j++){
+            if (board[i*N + j] == 2){
+                if(i == (N - 1)) 
+                    return 2;
+            }
+                
+            else if (board[i*N + j] == 1) {
+                if(i == 0) 
+                return 1;
+                
+            }    
+        }
+    }
+       return 0;  
+}
 
+
+float eval(int *board, int N, int n_fichas_player, int n_fichas_rival){
+    return n_fichas_player - n_fichas_rival;
 }
 
 
@@ -220,3 +238,116 @@ void freeMovimientos(Movimientos* movimientos){
     delete[] movimientos->listaMovimientos;
     delete movimientos;
 }
+
+
+Move montecarloMove(int* board, int N, int fichas_player, int fichas_rival, int turno_jugador){
+
+    float* points = new float[3];
+    Movimientos* IAMoves = new Movimientos;
+    float best_point = -9999;
+    int best_pos;
+    //Movimientos* select_move = new Movimientos;
+
+
+   
+    for (int j = 0; j < 3 ; j++){
+        
+    
+        int value;
+       
+        int* boardCopy = board;
+        int turno_jugador_m;
+        int n_fichas_player; 
+        int n_fichas_rival;
+        int fichas_turno;
+        int fichas_turno_rival;
+        
+        
+        
+       //memcpy(boardCopy, board, sizeof(int)*N*N);
+        
+        turno_jugador_m = turno_jugador;
+        n_fichas_player = fichas_player;
+        n_fichas_rival = fichas_player;
+        
+
+       
+        Movimientos* movimientos = generarMovimientos(board, N, n_fichas_rival, turno_jugador_m);
+        
+        Move IA_move = movimientos->listaMovimientos[rand() % movimientos->length]; //Por ahora random 
+
+        execute_movement(boardCopy, N, IA_move, &n_fichas_rival); 
+
+        (IAMoves->listaMovimientos)[j] = {IA_move.start_position,IA_move.end_position, IA_move.kill};
+        IAMoves->length++;
+
+
+        
+        
+        for (int i = 0; i < 3; i++ ){
+            printf("i:%d",i);
+                turno_jugador_m = (turno_jugador_m % 2) + 1;
+                if(turno_jugador_m == 1){
+                    fichas_turno = n_fichas_player;
+                    fichas_turno_rival = n_fichas_rival;
+                }
+
+                else {
+                    fichas_turno = n_fichas_rival;
+                    fichas_turno_rival = n_fichas_player;
+                }
+
+                
+                Movimientos* movimientos = generarMovimientos(boardCopy, N, fichas_turno, turno_jugador_m);
+                Move IA_move = movimientos->listaMovimientos[rand() % movimientos->length]; //Por ahora random 
+
+                execute_movement(boardCopy, N, IA_move, &n_fichas_rival); 
+
+
+
+            //  (select_move -> listaMovimientos)[movimientos -> length] = {i,i - 2 + 2*N*direccion_mov,i - 1 + N*direccion_mov};
+
+                value = eval(boardCopy, N, fichas_turno_rival, fichas_turno);
+            
+                if (win(boardCopy,N) == 1){
+                    points[j] = 20;
+                    break;
+                }
+
+                else if (win(boardCopy,N) == 2){
+                    points[j] = -20;
+                    break;   
+                }
+                
+                else if (i == 3){
+                    points[j] = value;
+                }
+        
+        }
+    
+    }
+    
+    for (int i = 0; i < 3; i++){
+        for (int j = i + 1; j < 3 ; j++) {
+            if((IAMoves->listaMovimientos)[i].start_position == (IAMoves->listaMovimientos)[j].start_position && (IAMoves->listaMovimientos)[i].end_position == (IAMoves->listaMovimientos)[j].end_position && i != j && i < j ) {
+                points[i] += points[j];
+                points[j] = -9999999;
+            }
+
+        }
+        if(points[i] > best_point) {
+            best_point = points[i];
+            best_pos = i;
+        } 
+    }
+
+   
+    return (IAMoves->listaMovimientos)[best_pos];
+        
+
+    
+    
+   
+}
+
+    
