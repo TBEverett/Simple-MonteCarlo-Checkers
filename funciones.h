@@ -214,8 +214,6 @@ float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player
 
     //Aplicamos movimiento a tablero local
     execute_movement(local_board, N, movimiento, &n_fichas_player);
-    
-    
 
     //Ahora simulamos movimientos para ambos jugadores hasta que alguien gane.
     int turno_jugador = 1; //turno_jugador 1 es del jugador
