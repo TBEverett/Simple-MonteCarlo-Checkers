@@ -74,56 +74,27 @@ void printBoard(int* board, int N){
     }
 }
 
-//Funcion de evaluación (o quizas se gana instantaneamente al llegar a la fila enemiga)
-/*
-float eval(int *board, int N){
-    int one_fichas = 0;
-    int two_fichas = 0;
-    int diff = 0;
-    
-    for(int i = 0; i < N; i++){
-       for(int j = 0; j < N; j++){
-            if (board[i*N + j] == 2){
-                if(i == (N - 1)) return -2;
-                else two_fichas++;
-            
-
-            else if (board[i*N + j] == 1) {
-                if(i == 0) return -1;
-                else one_fichas++;
-            }    
-       }  
-    }
-    */
-
 //Funcion que retorna ganador
-int win(int *board, int N){
+float win(int *board, int N){
     for(int i = 0; i < N; i++){
        for(int j = 0; j < N; j++){
             if (board[i*N + j] == 2){
                 if(i == (N - 1)) 
-                    return 2;
-            }
-                
+                    return 1.; //Retorna 1 si gana la IA
+            }   
             else if (board[i*N + j] == 1) {
                 if(i == 0) 
-                return 1;
-                
+                return 0.; //Retorna 0 si pierde la IA
             }    
         }
     }
-       return 0;  
+    return -1;  
 }
 
-
-//Funcion que evalua
-float eval(int *board, int N, int n_fichas_player, int n_fichas_rival){
-    return n_fichas_player - n_fichas_rival;
-}
 
 
 //Funcion que permite al jugador escoger su movimiento
-Move player_select_move(Movimientos* movimientos, int N){
+Move player_select_move(Movimientos* movimientos, int N){ //Aqui se podria usar letras para las filas
     cout << "Movimientos que puede realizar: " << endl;
     for(int i = 0; i < movimientos->length; i++){
         printf("%d: ", i+1);
@@ -180,7 +151,7 @@ Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliad
                     movimientos -> length++;
                 }
                 //Si derecha ocupada pero hay ficha rival y puede comersela, es un movimiento
-                else if ((board[i + 1 + N*direccion_mov] == ficha_rival) && (i + 2 + 2*N*direccion_mov > 0)){
+                else if ((board[i + 1 + N*direccion_mov] == ficha_rival) && (i + 2 + 2*N*direccion_mov > 0) ){
                     if (board[i + 2 + 2*N*direccion_mov] == 0){
                         (movimientos -> listaMovimientos)[movimientos -> length] = {i,i + 2 + 2*N*direccion_mov,i + 1 + N*direccion_mov};
                         movimientos -> length++;
@@ -195,7 +166,7 @@ Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliad
                     movimientos -> length++;
                 }
                 //Si izquierda ocupada pero ficha y puede comersela, es un movimiento
-                else if ((board[i - 1 + N * direccion_mov] == ficha_rival) && (i - 2 + 2*N*direccion_mov > 0)){
+                else if ((board[i - 1 + N * direccion_mov] == ficha_rival) && (i - 2 + 2*N*direccion_mov > 0) ){
                     if (board[i - 2 + 2*N*direccion_mov] == 0){
                         (movimientos -> listaMovimientos)[movimientos -> length] = {i,i - 2 + 2*N*direccion_mov,i - 1 + N*direccion_mov};
                         movimientos -> length++;
@@ -209,7 +180,7 @@ Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliad
                     movimientos -> length++;
                 }
                 //Si izquierda arriba ocupada pero ficha y puede comersela, es un movimiento
-                else if ((board[i - 1 + N*direccion_mov] == ficha_rival) && (i - 2 + 2*N*direccion_mov> 0)){
+                else if ((board[i - 1 + N*direccion_mov] == ficha_rival) && (i - 2 + 2*N*direccion_mov> 0) && colum > 1){
                     if (board[i - 2 + 2*N*direccion_mov] == 0){
                         (movimientos -> listaMovimientos)[movimientos -> length] = {i,i - 2 + 2*N*direccion_mov,i - 1 + N*direccion_mov};
                         movimientos -> length++;
@@ -221,7 +192,7 @@ Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliad
                     movimientos -> length++;
                 }
                 //Si derecha arriba ocupada pero ficha y puede comersela, es un movimiento
-                else if ((board[i + 1 + N*direccion_mov] == ficha_rival) && (i + 2 + 2*N*direccion_mov> 0)){
+                else if ((board[i + 1 + N*direccion_mov] == ficha_rival) && (i + 2 + 2*N*direccion_mov> 0) && colum < N-2){
                     if (board[i + 2 + 2*N*direccion_mov] == 0){
                         (movimientos -> listaMovimientos)[movimientos -> length] = {i,i + 2 + 2*N*direccion_mov,i + 1 + N*direccion_mov};
                         movimientos -> length++;
@@ -241,117 +212,48 @@ void freeMovimientos(Movimientos* movimientos){
     delete movimientos;
 }
 
+float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player, int n_fichas_IA){
+    //Creamos copia local del tablero
+    int* local_board = new int[N*N];
+    for(int i = 0; i < N*N; i++) local_board[i] = board[i];
 
+    //Aplicamos movimiento a tablero local
+    execute_movement(local_board, N, movimiento, &n_fichas_player);
 
-// Montecarlo Funcion (Modificar)
-
-/*
-Move montecarloMove(int* board, int N, int fichas_player, int fichas_rival, int turno_jugador){
-
-    float* points = new float[3];
-    Movimientos* IAMoves = new Movimientos;
-    float best_point = -9999;
-    int best_pos;
-    //Movimientos* select_move = new Movimientos;
-
-
-   
-    for (int j = 0; j < 3 ; j++){
+    //Ahora simulamos movimientos para ambos jugadores hasta que alguien gane.
+    int turno_jugador = 1; //turno_jugador 1 es del jugador
+    Movimientos* movimientos;
+    Move player_move;
+    Move IA_move;
+    float winner;
+    int iter = 0;
+    while(true){
         
-    
-        int value;
-       
-        int* boardCopy = board;
-        int turno_jugador_m;
-        int n_fichas_player; 
-        int n_fichas_rival;
-        int fichas_turno;
-        int fichas_turno_rival;
-        
-        
-        
-       //memcpy(boardCopy, board, sizeof(int)*N*N);
-        
-        turno_jugador_m = turno_jugador;
-        n_fichas_player = fichas_player;
-        n_fichas_rival = fichas_player;
-        
+        //Turno simulado del jugador
+        movimientos = generarMovimientos(local_board, N, n_fichas_player, turno_jugador);
+        if (movimientos->length == 0) return 1; //Si jugador se queda sin movimientos, gana la IA
+        int random = rand() % movimientos->length;
+        player_move = movimientos->listaMovimientos[random]; //Seleccion aleatoria de movimiento
+        freeMovimientos(movimientos); 
+        execute_movement(local_board, N, player_move, &n_fichas_IA);  
 
-       
-        Movimientos* movimientos = generarMovimientos(board, N, n_fichas_rival, turno_jugador_m);
-        
-        Move IA_move = movimientos->listaMovimientos[rand() % movimientos->length]; //Por ahora random 
+        //Revisión de win condition 
+        winner = win(local_board,N);
+        if (winner != -1) return winner;
+        turno_jugador = (turno_jugador % 2) + 1; 
 
-        execute_movement(boardCopy, N, IA_move, &n_fichas_rival); 
+        //Turno simulado de la IA
+        movimientos = generarMovimientos(local_board, N, n_fichas_IA, turno_jugador);
+        if (movimientos->length == 0) return -1; 
+        IA_move = movimientos->listaMovimientos[rand() % movimientos->length]; 
+        freeMovimientos(movimientos); 
+        execute_movement(local_board, N, IA_move, &n_fichas_player); 
 
-        (IAMoves->listaMovimientos)[j] = {IA_move.start_position,IA_move.end_position, IA_move.kill};
-        IAMoves->length++;
+        turno_jugador = (turno_jugador % 2) + 1;
 
-
-        
-        
-        for (int i = 0; i < 3; i++ ){
-            printf("i:%d",i);
-                turno_jugador_m = (turno_jugador_m % 2) + 1;
-                if(turno_jugador_m == 1){
-                    fichas_turno = n_fichas_player;
-                    fichas_turno_rival = n_fichas_rival;
-                }
-
-                else {
-                    fichas_turno = n_fichas_rival;
-                    fichas_turno_rival = n_fichas_player;
-                }
-
-                
-                Movimientos* movimientos = generarMovimientos(boardCopy, N, fichas_turno, turno_jugador_m);
-                Move IA_move = movimientos->listaMovimientos[rand() % movimientos->length]; //Por ahora random 
-
-                execute_movement(boardCopy, N, IA_move, &n_fichas_rival); 
-
-
-                value = eval(boardCopy, N, fichas_turno_rival, fichas_turno);
-            
-                if (win(boardCopy,N) == 1){
-                    points[j] = 20;
-                    break;
-                }
-
-                else if (win(boardCopy,N) == 2){
-                    points[j] = -20;
-                    break;   
-                }
-                
-                else if (i == 3){
-                    points[j] = value;
-                }
-        
-        }
-    
+        //Revisión de win condition 
+        winner = win(local_board,N);
+        if (winner != -1) return winner;
+        iter++;
     }
-    
-    for (int i = 0; i < 3; i++){
-        for (int j = i + 1; j < 3 ; j++) {
-            if((IAMoves->listaMovimientos)[i].start_position == (IAMoves->listaMovimientos)[j].start_position && (IAMoves->listaMovimientos)[i].end_position == (IAMoves->listaMovimientos)[j].end_position && i != j && i < j ) {
-                points[i] += points[j];
-                points[j] = -9999999;
-            }
-
-        }
-        if(points[i] > best_point) {
-            best_point = points[i];
-            best_pos = i;
-        } 
-    }
-
-   
-    return (IAMoves->listaMovimientos)[best_pos];
-        
-
-    
-    
-   
 }
-
-    
-*/

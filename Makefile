@@ -1,5 +1,5 @@
 all:
-	nvcc proyecto.cu -o proyecto
+	g++ proyecto.cpp -o proyecto
 	proyecto.exe
 clean:
 	*.exe

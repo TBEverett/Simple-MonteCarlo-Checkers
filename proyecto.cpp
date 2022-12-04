@@ -28,11 +28,11 @@ int main(int argc, char** argv) {
     int N = 8;
     int* board = new int[N*N];
     int n_fichas_player = 0;
-    int n_fichas_rival = 0;
+    int n_fichas_IA = 0;
     srand(time(NULL));
     
     //Construccion de tablero inicial
-    build_board(board, N, &n_fichas_player, &n_fichas_rival);
+    build_board(board, N, &n_fichas_player, &n_fichas_IA);
 
     // Juego version CPU, IA random
     bool flag_finalizado = false;
@@ -41,47 +41,64 @@ int main(int argc, char** argv) {
     Move player_move;
     Move IA_move;
     while(!flag_finalizado){
+        //Turno del jugador
         system("clear");
         printBoard(board, N);
         movimientos = generarMovimientos(board, N, n_fichas_player, turno_jugador);
+        if (movimientos->length == 0){
+            printBoard(board, N);
+            printf("Ha ganado la Inteligencia Articial. La era del hombre ha llegado a su fin");
+            flag_finalizado = true;
+        } 
         player_move = player_select_move(movimientos, N);
         freeMovimientos(movimientos);
+        execute_movement(board, N, player_move, &n_fichas_IA);  
 
-        execute_movement(board, N, player_move, &n_fichas_player);  
-
-        
+        //Turno de la IA
         turno_jugador = (turno_jugador % 2) + 1; 
-
-        movimientos = generarMovimientos(board, N, n_fichas_rival, turno_jugador);
-        
-        IA_move = movimientos->listaMovimientos[rand() % movimientos->length]; //Por ahora random
-        //IA_move = montecarloMove(board, N, n_fichas_player, n_fichas_rival, turno_jugador); 
-
-        execute_movement(board, N, IA_move, &n_fichas_rival); 
+        movimientos = generarMovimientos(board, N, n_fichas_IA, turno_jugador);
+        if (movimientos->length == 0){
+            printBoard(board, N);
+            printf("Ha ganado el jugador humano, venciendo a Skynet.");
+            flag_finalizado = true;
+        } 
+        //Simulamos para cada movimiento
+        int NTHREADS = 100;
+        int indice_maximo = 0;
+        float eval_maxima = 0.;
+        float eval_actual = 0.;
+        for(int i = 0; i < movimientos->length; i++){
+            for (int j = 0; j < NTHREADS; j++){
+                eval_actual += MonteCarloSimulation(board, N, movimientos->listaMovimientos[i], n_fichas_player, n_fichas_IA); //Simulacion en CPU de 1 solo hilo retornará -1 o 1
+            }
+            printf("(%d-%d,",movimientos->listaMovimientos[i].start_position / N , movimientos->listaMovimientos[i].start_position % N);
+            printf("%d-%d)",movimientos->listaMovimientos[i].end_position / N ,movimientos->listaMovimientos[i].end_position % N);
+            
+            eval_actual = (eval_actual/NTHREADS) * 100;
+            printf("Evaluacion : %d%c\n ", (int) eval_actual, '%');
+            if (eval_actual > eval_maxima){
+                indice_maximo = i;
+                eval_maxima = eval_actual;
+            }
+            eval_actual = 0;
+        } 
+        //system("pause");
+        IA_move = movimientos->listaMovimientos[indice_maximo];
+        execute_movement(board, N, IA_move, &n_fichas_player); 
         freeMovimientos(movimientos); 
-
         turno_jugador = (turno_jugador % 2) + 1;
 
-    
-      
-       ////////////////////////////////////////
-        if (win(board,N) == 1){
-            printBoard(board, N);
-            printf("Ha ganado el jugador 1");
+        //Revisión de win condition 
+        if (win(board,N) == 0){
+            printf("Ha ganado el jugador humano, venciendo a Skynet.");
             flag_finalizado = true;
             
         }
-
-        else if (win(board,N) == 2){
-            printBoard(board, N);
-            printf("Ha ganado el jugador 2");
-            flag_finalizado = false;
-            
+        else if (win(board,N) == 1){
+            printf("Ha ganado la Inteligencia Articial. La era del hombre ha llegado a su fin");
+            flag_finalizado = true;
         }
-        
-
     }
-        ///////////////////////////////////////
     
     /*
 	float dt;
