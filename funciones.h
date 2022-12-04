@@ -221,7 +221,7 @@ float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player
     int turno_jugador = 1; //turno_jugador 1 es del jugador
     Movimientos* movimientos = new Movimientos;
     movimientos->length = 0;
-    movimientos->listaMovimientos = new Move[2*N]; //Cantidad de movimientos es acotada
+    movimientos->listaMovimientos = new Move[2 * (n_fichas_IA + n_fichas_player)]; //Cantidad de movimientos es acotada
     Move player_move;
     Move IA_move;
     float winner;
@@ -239,6 +239,7 @@ float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player
         winner = win(local_board,N);
         if (winner != -1) break;
         turno_jugador = (turno_jugador % 2) + 1; 
+       
         
         //Turno simulado de la IA
         movimientos = generarMovimientos(local_board, N, n_fichas_IA, turno_jugador, movimientos);
@@ -252,6 +253,7 @@ float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player
         winner = win(local_board,N);
         if (winner != -1) break;
         iter++;
+        
     }
     delete[] local_board;
     return winner;
