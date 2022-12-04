@@ -213,12 +213,15 @@ void freeMovimientos(Movimientos* movimientos){
 }
 
 float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player, int n_fichas_IA){
+    printf("Antes");
     //Creamos copia local del tablero
     int* local_board = new int[N*N];
     for(int i = 0; i < N*N; i++) local_board[i] = board[i];
 
     //Aplicamos movimiento a tablero local
     execute_movement(local_board, N, movimiento, &n_fichas_player);
+    
+    printf("Despues\n");
 
     //Ahora simulamos movimientos para ambos jugadores hasta que alguien gane.
     int turno_jugador = 1; //turno_jugador 1 es del jugador
@@ -256,4 +259,5 @@ float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player
         if (winner != -1) return winner;
         iter++;
     }
+    delete[] local_board;
 }

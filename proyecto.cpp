@@ -63,14 +63,16 @@ int main(int argc, char** argv) {
             flag_finalizado = true;
         } 
         //Simulamos para cada movimiento
-        int NTHREADS = 100;
+        int NTHREADS = 10000;
         int indice_maximo = 0;
         float eval_maxima = 0.;
         float eval_actual = 0.;
         for(int i = 0; i < movimientos->length; i++){
+            
             for (int j = 0; j < NTHREADS; j++){
-                eval_actual += MonteCarloSimulation(board, N, movimientos->listaMovimientos[i], n_fichas_player, n_fichas_IA); //Simulacion en CPU de 1 solo hilo retornará -1 o 1
+                eval_actual += MonteCarloSimulation(board, N, movimientos->listaMovimientos[i], n_fichas_player, n_fichas_IA); //Simulacion en CPU de 1 solo hilo retornará -1 o 1  
             }
+            
             printf("(%d-%d,",movimientos->listaMovimientos[i].start_position / N , movimientos->listaMovimientos[i].start_position % N);
             printf("%d-%d)",movimientos->listaMovimientos[i].end_position / N ,movimientos->listaMovimientos[i].end_position % N);
             
