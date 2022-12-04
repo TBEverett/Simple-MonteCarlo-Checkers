@@ -37,26 +37,27 @@ int main(int argc, char** argv) {
     // Juego version CPU, IA random
     bool flag_finalizado = false;
     int turno_jugador = 1; //turno_jugador 1 es del jugador
-    Movimientos* movimientos;
+    Movimientos* movimientos = new Movimientos;
+    movimientos->length = 0;
+    movimientos->listaMovimientos = new Move[2*N]; //Cantidad de movimientos es acotada
     Move player_move;
     Move IA_move;
     while(!flag_finalizado){
         //Turno del jugador
         system("clear");
         printBoard(board, N);
-        movimientos = generarMovimientos(board, N, n_fichas_player, turno_jugador);
+        movimientos = generarMovimientos(board, N, n_fichas_player, turno_jugador, movimientos);
         if (movimientos->length == 0){
             printBoard(board, N);
             printf("Ha ganado la Inteligencia Articial. La era del hombre ha llegado a su fin");
             flag_finalizado = true;
         } 
         player_move = player_select_move(movimientos, N);
-        freeMovimientos(movimientos);
         execute_movement(board, N, player_move, &n_fichas_IA);  
 
         //Turno de la IA
         turno_jugador = (turno_jugador % 2) + 1; 
-        movimientos = generarMovimientos(board, N, n_fichas_IA, turno_jugador);
+        movimientos = generarMovimientos(board, N, n_fichas_IA, turno_jugador, movimientos);
         if (movimientos->length == 0){
             printBoard(board, N);
             printf("Ha ganado el jugador humano, venciendo a Skynet.");
@@ -86,8 +87,7 @@ int main(int argc, char** argv) {
         } 
         //system("pause");
         IA_move = movimientos->listaMovimientos[indice_maximo];
-        execute_movement(board, N, IA_move, &n_fichas_player); 
-        freeMovimientos(movimientos); 
+        execute_movement(board, N, IA_move, &n_fichas_player);
         turno_jugador = (turno_jugador % 2) + 1;
 
         //Revisión de win condition 

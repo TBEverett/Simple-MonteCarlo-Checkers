@@ -120,12 +120,11 @@ void execute_movement(int* &board, int N, Move movimiento, int* n_fichas){
 
 
 //Función que retorna una lista con movimientos
-Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliada){ //n_fichas (de 1 jugador) nos servirá para dejar de buscar cuando hayamos procesado todas las fichas
+Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliada, Movimientos* movimientos){ //n_fichas (de 1 jugador) nos servirá para dejar de buscar cuando hayamos procesado todas las fichas
     int colum;
 
     int aux_numero_fichas = n_fichas;
-    Movimientos* movimientos = new Movimientos; 
-    movimientos -> listaMovimientos = new Move[n_fichas * 2]; //Acotamos la cantidad de movimientos (cantidad de fichas * 2)
+    movimientos -> listaMovimientos; //Acotamos la cantidad de movimientos (cantidad de fichas * 2)
     movimientos -> length = 0;
 
 
@@ -207,13 +206,8 @@ Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliad
 }
 
 
-void freeMovimientos(Movimientos* movimientos){
-    delete[] movimientos->listaMovimientos;
-    delete movimientos;
-}
-
 float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player, int n_fichas_IA){
-    printf("Antes");
+  
     //Creamos copia local del tablero
     int* local_board = new int[N*N];
     for(int i = 0; i < N*N; i++) local_board[i] = board[i];
@@ -221,11 +215,13 @@ float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player
     //Aplicamos movimiento a tablero local
     execute_movement(local_board, N, movimiento, &n_fichas_player);
     
-    printf("Despues\n");
+    
 
     //Ahora simulamos movimientos para ambos jugadores hasta que alguien gane.
     int turno_jugador = 1; //turno_jugador 1 es del jugador
-    Movimientos* movimientos;
+    Movimientos* movimientos = new Movimientos;
+    movimientos->length = 0;
+    movimientos->listaMovimientos = new Move[2*N]; //Cantidad de movimientos es acotada
     Move player_move;
     Move IA_move;
     float winner;
@@ -233,31 +229,30 @@ float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player
     while(true){
         
         //Turno simulado del jugador
-        movimientos = generarMovimientos(local_board, N, n_fichas_player, turno_jugador);
+        movimientos = generarMovimientos(local_board, N, n_fichas_player, turno_jugador, movimientos);
         if (movimientos->length == 0) return 1; //Si jugador se queda sin movimientos, gana la IA
         int random = rand() % movimientos->length;
-        player_move = movimientos->listaMovimientos[random]; //Seleccion aleatoria de movimiento
-        freeMovimientos(movimientos); 
+        player_move = movimientos->listaMovimientos[random]; //Seleccion aleatoria de movimiento 
         execute_movement(local_board, N, player_move, &n_fichas_IA);  
 
         //Revisión de win condition 
         winner = win(local_board,N);
-        if (winner != -1) return winner;
+        if (winner != -1) break;
         turno_jugador = (turno_jugador % 2) + 1; 
-
+        
         //Turno simulado de la IA
-        movimientos = generarMovimientos(local_board, N, n_fichas_IA, turno_jugador);
+        movimientos = generarMovimientos(local_board, N, n_fichas_IA, turno_jugador, movimientos);
         if (movimientos->length == 0) return -1; 
-        IA_move = movimientos->listaMovimientos[rand() % movimientos->length]; 
-        freeMovimientos(movimientos); 
+        IA_move = movimientos->listaMovimientos[rand() % movimientos->length];
         execute_movement(local_board, N, IA_move, &n_fichas_player); 
 
         turno_jugador = (turno_jugador % 2) + 1;
 
         //Revisión de win condition 
         winner = win(local_board,N);
-        if (winner != -1) return winner;
+        if (winner != -1) break;
         iter++;
     }
     delete[] local_board;
+    return winner;
 }
