@@ -107,10 +107,6 @@ int main(int argc, char** argv) {
     char letras[] = {'A','B','C','D','E','F','G','H','K','L','M','N'};
     srand(time(NULL));
     float time = 0;
-    float dt;
-    cudaEvent_t e1, e2;
-    cudaEventCreate(&e1);
-    cudaEventCreate(&e2);
     clock_t t1, t2;
     
     //Construccion de tablero inicial
@@ -196,7 +192,7 @@ int main(int argc, char** argv) {
             }
         } 
 
-        if (verbose == 1 || verbose == 0) system("pause");
+        if (verbose == 1) system("pause");
         IA_move = movimientos->listaMovimientos[indice_maximo];
         execute_movement(board, N, IA_move, &n_fichas_player);
         turno_jugador = (turno_jugador % 2) + 1;
@@ -212,8 +208,8 @@ int main(int argc, char** argv) {
             flag_finalizado = true;
         }
     }
-    if (CPUorGPU == 0) printf("Tiempo de computo medido por CPU fue: %f [ms]", time);
-    else printf("Tiempo de computo medido por GPU fue: %f [ms]", time);
+    if (CPUorGPU == 0) printf("Tiempo de computo medido por CPU fue: %f [ms]\n", time);
+    else printf("Tiempo de computo medido por GPU fue: %f [ms]\n", time);
     
 
     
