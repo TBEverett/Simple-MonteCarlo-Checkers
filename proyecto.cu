@@ -88,13 +88,17 @@ __global__ void kernel(int* board, int N, int start_position, int end_position, 
 
 int main(int argc, char** argv) { 
 
-    if (argc != 3){
-        printf("Porfavor ingrese 3 parametros:\n N:(>=8) NTHREADS(>0) Verbose(0|1)");
+    if (argc != 4){
+        printf("Porfavor ingrese 3 parametros:\n N:(>=8) NTHREADS(>0) Verbose(0|1) CPUorGPU(0|1)");
     }
 
     int N = atoi(argv[1]);
-    int NTHREADS = atoi(argv[2]);
+    int gs = atoi(argv[2]) / 256 + 1;
+    int bs = atoi(argv[2]) / gs;
     int verbose = atoi(argv[3]);
+    int CPUorGPU = atoi(argv[4]); //0 o 1 para CPU o GPU respectivamente
+
+    printf("%d %d", gs,bs);
 
     // Variables que trabajaremos 
     int* board = new int[N*N];
@@ -102,9 +106,12 @@ int main(int argc, char** argv) {
     int n_fichas_IA = 0;
     char letras[] = {'A','B','C','D','E','F','G','H','K','L','M','N'};
     srand(time(NULL));
-
-	int bs = 256;
-	int gs = 4;
+    float time = 0;
+    float dt;
+    cudaEvent_t e1, e2;
+    cudaEventCreate(&e1);
+    cudaEventCreate(&e2);
+    clock_t t1, t2;
     
     //Construccion de tablero inicial
     build_board(board, N, &n_fichas_player, &n_fichas_IA);
@@ -157,9 +164,25 @@ int main(int argc, char** argv) {
             int end_position =  movimientos->listaMovimientos[i].end_position;
             int kill = movimientos->listaMovimientos[i].kill;
 
-            cudaMemcpy(evaluacionGPU,evaluacion, sizeof(float), cudaMemcpyHostToDevice);
-            kernel << <gs, bs >> > (boardGPU, N, start_position, end_position, kill, n_fichas_player, n_fichas_IA, evaluacionGPU);
-            cudaMemcpy(evaluacion, evaluacionGPU, sizeof(float), cudaMemcpyDeviceToHost);
+            if(CPUorGPU == 1){
+                
+                t1 = clock();
+                cudaMemcpy(evaluacionGPU,evaluacion, sizeof(float), cudaMemcpyHostToDevice);
+                kernel << <gs, bs >> > (boardGPU, N, start_position, end_position, kill, n_fichas_player, n_fichas_IA, evaluacionGPU);
+                cudaMemcpy(evaluacion, evaluacionGPU, sizeof(float), cudaMemcpyDeviceToHost);
+                t2 = clock();
+                float ms = 1000.0 * (float)(t2 - t1) / CLOCKS_PER_SEC;
+                time += ms;
+
+            }
+            else if (CPUorGPU == 0){
+                t1 = clock();
+                for(int j = 0; j < bs*gs; j++) *evaluacion += MonteCarloSimulation(board, N, movimientos->listaMovimientos[i], n_fichas_player, n_fichas_IA);
+                t2 = clock();
+                float ms = 1000.0 * (float)(t2 - t1) / CLOCKS_PER_SEC;
+                time += ms;
+            }
+
             *evaluacion = (*evaluacion/(bs*gs)) * 100;
             if (verbose == 1){
                 printf("(%c%d,",letras[movimientos->listaMovimientos[i].start_position / N ], movimientos->listaMovimientos[i].start_position % N);
@@ -173,40 +196,31 @@ int main(int argc, char** argv) {
             }
         } 
 
-        if (verbose == 1) system("pause");
+        if (verbose == 1 || verbose == 0) system("pause");
         IA_move = movimientos->listaMovimientos[indice_maximo];
         execute_movement(board, N, IA_move, &n_fichas_player);
         turno_jugador = (turno_jugador % 2) + 1;
 
         //Revisión de win condition 
         if (win(board,N) == 0){
-            printf("Ha ganado el jugador humano, venciendo a Skynet.");
+            printf("Ha ganado el jugador humano, venciendo a Skynet.\n");
             flag_finalizado = true;
             
         }
         else if (win(board,N) == 1){
-            printf("Ha ganado la Inteligencia Articial. La era del hombre ha llegado a su fin");
+            printf("Ha ganado la Inteligencia Articial. La era del hombre ha llegado a su fin.\n");
             flag_finalizado = true;
         }
     }
+    if (CPUorGPU == 0) printf("Tiempo de computo medido por CPU fue: %f [ms]", time);
+    else printf("Tiempo de computo medido por GPU fue: %f [ms]", time);
     
+
     
 
-    /*
-    float dt;
-    cudaEvent_t e1, e2;
-    cudaEventCreate(&e1);
-    cudaEventCreate(&e2);
-    cudaEventRecord(e1);
-   
 
-    cudaEventRecord(e2);
-    cudaEventSynchronize(e2);
-    cudaEventElapsedTime(&dt, e1, e2);
-    std::cout << "Tiempo GPU Sin Streams: " << dt << " [ms]" << std::endl;
-
-	cudaFree(AinGPU); cudaFree(AoutGPU);
-	delete[] Ain;
-    */
+	//cudaFree(AinGPU); cudaFree(AoutGPU);
+	//delete[] Ain;
+    
     
 }

@@ -201,7 +201,6 @@ __host__ __device__ Movimientos* generarMovimientos(int* board, int N, int n_fic
 }
 
 //Single Threaded Monte Carlo for Checkers
-/* 
 float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player, int n_fichas_IA){
   
     //Creamos copia local del tablero
@@ -226,6 +225,7 @@ float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player
         movimientos = generarMovimientos(local_board, N, n_fichas_player, turno_jugador, movimientos);
         if (movimientos->length == 0) return 1; //Si jugador se queda sin movimientos, gana la IA
         int random = rand() % movimientos->length;
+
         player_move = movimientos->listaMovimientos[random]; //Seleccion aleatoria de movimiento 
         execute_movement(local_board, N, player_move, &n_fichas_IA);  
 
@@ -237,7 +237,8 @@ float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player
         
         //Turno simulado de la IA
         movimientos = generarMovimientos(local_board, N, n_fichas_IA, turno_jugador, movimientos);
-        if (movimientos->length == 0) return -1; 
+        if (movimientos->length == 0) return 0;
+
         IA_move = movimientos->listaMovimientos[rand() % movimientos->length];
         execute_movement(local_board, N, IA_move, &n_fichas_player); 
 
@@ -247,9 +248,11 @@ float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player
         winner = win(local_board,N);
         if (winner != -1) break;
         iter++;
-        
     }
+    
     delete[] local_board;
+    delete[] movimientos->listaMovimientos;
+    delete movimientos;
+
     return winner;
 }
-*/
