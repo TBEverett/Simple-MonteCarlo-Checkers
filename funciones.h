@@ -4,13 +4,13 @@
 #include <iostream>
 using namespace std;
 
-__host__ __device__ struct Move{
+struct Move{
     int start_position;
     int end_position;
     int kill;
 };
 
-__host__ __device__ struct Movimientos{
+struct Movimientos{
     Move* listaMovimientos;
     int length; 
 };
@@ -54,16 +54,16 @@ void build_board(int* board, int N, int *n_fichas_player, int*n_fichas_rival){
 void printBoard(int* board, int N){
     char letras[] = {'A','B','C','D','E','F','G','H','K','L','M','N'};
     cout << "   ";
-    for (int i = 0; i <= 2*N; i++){
-        if (i == N) cout << endl << "   ";
-        else if (i < N) cout << i << " ";
-        else if (i > N) cout << "- ";    
+    for (int i = 0; i < N; i++){
+        cout << i << " ";  
     }
     cout << endl;
     for (int j = 0; j < N; j++){
         cout << letras[j] << "| ";
         for(int i = 0; i < N; i++){
-            cout << board[i +  j*N] << " ";
+            if (board[i + j*N] == 0) cout << "- ";
+            else if(board[i + j*N] == 1) cout << 'O' << " ";
+            else if(board[i + j*N] == 2) cout << 'X' << " ";
         }
         cout << endl;
     }
@@ -119,8 +119,7 @@ __host__ __device__ void execute_movement(int* &board, int N, Move movimiento, i
 __host__ __device__ Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliada, Movimientos* movimientos){ //n_fichas (de 1 jugador) nos servirá para dejar de buscar cuando hayamos procesado todas las fichas
     int colum;
 
-    int aux_numero_fichas = n_fichas;
-    movimientos -> listaMovimientos; //Acotamos la cantidad de movimientos (cantidad de fichas * 2)
+    int aux_numero_fichas = n_fichas; //Acotamos la cantidad de movimientos (cantidad de fichas * 2)
     movimientos -> length = 0;
 
 

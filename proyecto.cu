@@ -77,17 +77,32 @@ __global__ void kernel(int* board, int N, int start_position, int end_position, 
 
 /* ----   Codigo Principal ---- */
  
+//Agregar parametros al cmd:
+// N: Tamaño de tablero
+// NTHREADS: Cantidad de hebras
+// Verbose: 0 o 1 por si se quiere printear las probabilidades
 
-int main(int argc, char** argv) {
+//Arreglar warnings
+
+//Medir Tiempos
+
+int main(int argc, char** argv) { 
+
+    if (argc != 3){
+        printf("Porfavor ingrese 3 parametros:\n N:(>=8) NTHREADS(>0) Verbose(0|1)");
+    }
+
+    int N = atoi(argv[1]);
+    int NTHREADS = atoi(argv[2]);
+    int verbose = atoi(argv[3]);
 
     // Variables que trabajaremos 
-    int N = 12;
     int* board = new int[N*N];
     int n_fichas_player = 0;
     int n_fichas_IA = 0;
     char letras[] = {'A','B','C','D','E','F','G','H','K','L','M','N'};
     srand(time(NULL));
-    float dt;
+
 	int bs = 256;
 	int gs = 4;
     
@@ -105,6 +120,7 @@ int main(int argc, char** argv) {
     while(!flag_finalizado){
         //Turno del jugador
         system("clear");
+        printf("------Turno del jugador------\n");
         printBoard(board, N);
         movimientos = generarMovimientos(board, N, n_fichas_player, turno_jugador, movimientos);
         if (movimientos->length == 0){
@@ -113,7 +129,10 @@ int main(int argc, char** argv) {
             flag_finalizado = true;
         } 
         player_move = player_select_move(movimientos, N);
-        execute_movement(board, N, player_move, &n_fichas_IA);  
+        execute_movement(board, N, player_move, &n_fichas_IA); 
+        system("clear");
+        printf("------Turno de la IA------\n");
+        printBoard(board, N); 
 
         //Turno de la IA
         turno_jugador = (turno_jugador % 2) + 1; 
@@ -140,18 +159,21 @@ int main(int argc, char** argv) {
 
             cudaMemcpy(evaluacionGPU,evaluacion, sizeof(float), cudaMemcpyHostToDevice);
             kernel << <gs, bs >> > (boardGPU, N, start_position, end_position, kill, n_fichas_player, n_fichas_IA, evaluacionGPU);
-            cudaMemcpy(evaluacion, evaluacionGPU, sizeof(float), cudaMemcpyDeviceToHost); //Copia valor total
-            
-            printf("(%c%d,",letras[movimientos->listaMovimientos[i].start_position / N ], movimientos->listaMovimientos[i].start_position % N);
-            printf("%c%d)",letras[movimientos->listaMovimientos[i].end_position / N ],movimientos->listaMovimientos[i].end_position % N);
+            cudaMemcpy(evaluacion, evaluacionGPU, sizeof(float), cudaMemcpyDeviceToHost);
             *evaluacion = (*evaluacion/(bs*gs)) * 100;
-            printf("Evaluacion : %2.f%c\n",*evaluacion, '%');
+            if (verbose == 1){
+                printf("(%c%d,",letras[movimientos->listaMovimientos[i].start_position / N ], movimientos->listaMovimientos[i].start_position % N);
+                printf("%c%d) ",letras[movimientos->listaMovimientos[i].end_position / N ],movimientos->listaMovimientos[i].end_position % N);
+                printf("Evaluacion : %2.f%c\n",*evaluacion, '%');
+                
+            }           
             if (*evaluacion > eval_maxima){
                 indice_maximo = i;
                 eval_maxima = *evaluacion;
             }
         } 
-        system("pause");
+
+        if (verbose == 1) system("pause");
         IA_move = movimientos->listaMovimientos[indice_maximo];
         execute_movement(board, N, IA_move, &n_fichas_player);
         turno_jugador = (turno_jugador % 2) + 1;
@@ -171,6 +193,7 @@ int main(int argc, char** argv) {
     
 
     /*
+    float dt;
     cudaEvent_t e1, e2;
     cudaEventCreate(&e1);
     cudaEventCreate(&e2);
