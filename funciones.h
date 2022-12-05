@@ -4,19 +4,13 @@
 #include <iostream>
 using namespace std;
 
-struct Nodo{
-    int* solucion;
-    Nodo* izq;
-    Nodo* der;
-};
-
-struct Move{
+__host__ __device__ struct Move{
     int start_position;
     int end_position;
     int kill;
 };
 
-struct Movimientos{
+__host__ __device__ struct Movimientos{
     Move* listaMovimientos;
     int length; 
 };
@@ -76,7 +70,7 @@ void printBoard(int* board, int N){
 }
 
 //Funcion que retorna ganador
-float win(int *board, int N){
+__host__ __device__ float win(int *board, int N){
     for(int i = 0; i < N; i++){
        for(int j = 0; j < N; j++){
             if (board[i*N + j] == 2){
@@ -89,7 +83,7 @@ float win(int *board, int N){
             }    
         }
     }
-    return -1;  
+    return -1.;  
 }
 
 
@@ -111,7 +105,7 @@ Move player_select_move(Movimientos* movimientos, int N){
 }
 
 //Función que ejecuta un movimiento sobre el tablero. Asume que el movimiento siempre es factible.
-void execute_movement(int* &board, int N, Move movimiento, int* n_fichas){
+__host__ __device__ void execute_movement(int* &board, int N, Move movimiento, int* n_fichas){
     board[movimiento.end_position] = board[movimiento.start_position];
     board[movimiento.start_position] = 0;
     if (movimiento.kill != -1){
@@ -122,7 +116,7 @@ void execute_movement(int* &board, int N, Move movimiento, int* n_fichas){
 
 
 //Función que retorna una lista con movimientos
-Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliada, Movimientos* movimientos){ //n_fichas (de 1 jugador) nos servirá para dejar de buscar cuando hayamos procesado todas las fichas
+__host__ __device__ Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliada, Movimientos* movimientos){ //n_fichas (de 1 jugador) nos servirá para dejar de buscar cuando hayamos procesado todas las fichas
     int colum;
 
     int aux_numero_fichas = n_fichas;
@@ -207,7 +201,8 @@ Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliad
     return movimientos;
 }
 
-
+//Single Threaded Monte Carlo for Checkers
+/* 
 float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player, int n_fichas_IA){
   
     //Creamos copia local del tablero
@@ -258,3 +253,4 @@ float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player
     delete[] local_board;
     return winner;
 }
+*/
