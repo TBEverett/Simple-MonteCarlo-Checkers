@@ -10,6 +10,7 @@ using namespace std;
 
 
 __global__ void kernel(int* board, int N, int start_position, int end_position, int kill, int n_fichas_player, int n_fichas_IA, float* evaluacion_total){
+    
     curandState state;
     curand_init(clock64(), threadIdx.x + blockDim.x * blockIdx.x, 0, &state);
 
@@ -39,6 +40,7 @@ __global__ void kernel(int* board, int N, int start_position, int end_position, 
             winner = 1;
             break;
         } 
+
         random = curand_uniform(&state) * movimientos->length;
         player_move = movimientos->listaMovimientos[random]; //Seleccion aleatoria de movimiento 
         execute_movement(local_board, N, player_move, &n_fichas_IA);  

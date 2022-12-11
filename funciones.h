@@ -133,6 +133,8 @@ __host__ __device__ Movimientos* generarMovimientos(int* board, int N, int n_fic
         direccion_mov = 1;
         ficha_rival = 1;
     }
+    int one = 1;
+    int two = 2;
     for(int i = 0; i < N*N; i++){
         colum = i % N;
         //Encontramos una ficha aliada
@@ -141,13 +143,17 @@ __host__ __device__ Movimientos* generarMovimientos(int* board, int N, int n_fic
             if (colum == 0){
                 //Si derecha esta libre, agregamos el movimiento
                 if (board[i + 1 + N*direccion_mov] == 0){
-                    (movimientos -> listaMovimientos)[movimientos -> length] = {i,i + 1 + N*direccion_mov,-1};
+                    (movimientos -> listaMovimientos)[movimientos -> length].start_position = i;
+                    (movimientos -> listaMovimientos)[movimientos -> length].end_position = i + one + N*direccion_mov;
+                    (movimientos -> listaMovimientos)[movimientos -> length].kill = -1;
                     movimientos -> length++;
                 }
                 //Si derecha ocupada pero hay ficha rival y puede comersela, es un movimiento
                 else if ((board[i + 1 + N*direccion_mov] == ficha_rival) && (i + 2 + 2*N*direccion_mov > 0) ){
                     if (board[i + 2 + 2*N*direccion_mov] == 0){
-                        (movimientos -> listaMovimientos)[movimientos -> length] = {i,i + 2 + 2*N*direccion_mov,i + 1 + N*direccion_mov};
+                        (movimientos -> listaMovimientos)[movimientos -> length].start_position = i;
+                        (movimientos -> listaMovimientos)[movimientos -> length].end_position = i + two + two*N*direccion_mov;
+                        (movimientos -> listaMovimientos)[movimientos -> length].kill = i + one + N*direccion_mov;
                         movimientos -> length++;
                     }
                 }
@@ -156,13 +162,17 @@ __host__ __device__ Movimientos* generarMovimientos(int* board, int N, int n_fic
             else if(colum == N-1){
                 //Si izquierda esta libre, agregamos el movimiento
                 if (board[i - 1 + N*direccion_mov] == 0){
-                    (movimientos -> listaMovimientos)[movimientos -> length] = {i,i - 1 + N * direccion_mov,-1};
+                    (movimientos -> listaMovimientos)[movimientos -> length].start_position = i;
+                    (movimientos -> listaMovimientos)[movimientos -> length].end_position = i - one + N*direccion_mov;
+                    (movimientos -> listaMovimientos)[movimientos -> length].kill = -1;
                     movimientos -> length++;
                 }
                 //Si izquierda ocupada pero ficha y puede comersela, es un movimiento
                 else if ((board[i - 1 + N * direccion_mov] == ficha_rival) && (i - 2 + 2*N*direccion_mov > 0) ){
                     if (board[i - 2 + 2*N*direccion_mov] == 0){
-                        (movimientos -> listaMovimientos)[movimientos -> length] = {i,i - 2 + 2*N*direccion_mov,i - 1 + N*direccion_mov};
+                        (movimientos -> listaMovimientos)[movimientos -> length].start_position = i;
+                        (movimientos -> listaMovimientos)[movimientos -> length].end_position = i - two + two*N*direccion_mov;
+                        (movimientos -> listaMovimientos)[movimientos -> length].kill = i - one + N*direccion_mov;
                         movimientos -> length++;
                     }
                 }
@@ -170,25 +180,33 @@ __host__ __device__ Movimientos* generarMovimientos(int* board, int N, int n_fic
             else{
                 //Si izquierda arriba esta libre, agregamos el movimiento
                 if (board[i - 1 + N*direccion_mov] == 0){
-                    (movimientos -> listaMovimientos)[movimientos -> length] = {i,i - 1 + N*direccion_mov,-1};
+                    (movimientos -> listaMovimientos)[movimientos -> length].start_position = i;
+                    (movimientos -> listaMovimientos)[movimientos -> length].end_position = i - one + N*direccion_mov;
+                    (movimientos -> listaMovimientos)[movimientos -> length].kill = -1;
                     movimientos -> length++;
                 }
                 //Si izquierda arriba ocupada pero ficha y puede comersela, es un movimiento
                 else if ((board[i - 1 + N*direccion_mov] == ficha_rival) && (i - 2 + 2*N*direccion_mov> 0) && colum > 1){
                     if (board[i - 2 + 2*N*direccion_mov] == 0){
-                        (movimientos -> listaMovimientos)[movimientos -> length] = {i,i - 2 + 2*N*direccion_mov,i - 1 + N*direccion_mov};
+                        (movimientos -> listaMovimientos)[movimientos -> length].start_position = i;
+                        (movimientos -> listaMovimientos)[movimientos -> length].end_position = i - two + two*N*direccion_mov;
+                        (movimientos -> listaMovimientos)[movimientos -> length].kill = i - one + N*direccion_mov;
                         movimientos -> length++;
                     }
                 }
                 //Si derecha arriba esta libre, agregamos el movimiento
                 if (board[i + 1 + N*direccion_mov] == 0){
-                    (movimientos -> listaMovimientos)[movimientos -> length] = {i,i + 1 + N*direccion_mov,-1};
+                    (movimientos -> listaMovimientos)[movimientos -> length].start_position = i;
+                    (movimientos -> listaMovimientos)[movimientos -> length].end_position = i + one + N*direccion_mov;
+                    (movimientos -> listaMovimientos)[movimientos -> length].kill = -1;
                     movimientos -> length++;
                 }
                 //Si derecha arriba ocupada pero ficha y puede comersela, es un movimiento
                 else if ((board[i + 1 + N*direccion_mov] == ficha_rival) && (i + 2 + 2*N*direccion_mov> 0) && colum < N-2){
                     if (board[i + 2 + 2*N*direccion_mov] == 0){
-                        (movimientos -> listaMovimientos)[movimientos -> length] = {i,i + 2 + 2*N*direccion_mov,i + 1 + N*direccion_mov};
+                        (movimientos -> listaMovimientos)[movimientos -> length].start_position = i;
+                        (movimientos -> listaMovimientos)[movimientos -> length].end_position = i + two + two*N*direccion_mov;
+                        (movimientos -> listaMovimientos)[movimientos -> length].kill = i + one + N*direccion_mov;
                         movimientos -> length++;
                     }
                 }
