@@ -6,7 +6,7 @@
 #include "funciones.h"
 #include <curand_kernel.h>
 
-__global__ void kernel(int* board, int N, int NTHREADS , Move movimiento, int move_number, /*int start_position, int end_position, int kill,*/ int n_fichas_player, int n_fichas_IA, float* evaluacionGPU, float* evalesGPU){
+__global__ void kernel(short* board, int N, int NTHREADS , Move movimiento, int move_number,int n_fichas_player, int n_fichas_IA, float* evaluacionGPU, float* evalesGPU){
     int tid = threadIdx.x + blockDim.x * blockIdx.x;
     
     if (tid < NTHREADS){
@@ -14,7 +14,7 @@ __global__ void kernel(int* board, int N, int NTHREADS , Move movimiento, int mo
         curand_init(clock64(), threadIdx.x + blockDim.x * blockIdx.x, 0, &state);
 
         //Creamos copia local del tablero
-        int* local_board = new int[N*N];
+        short* local_board = new short[N*N];
         for(int i = 0; i < N*N; i++) local_board[i] = board[i];
 
         //Move movimiento = {start_position,end_position, kill};
@@ -71,7 +71,6 @@ __global__ void kernel(int* board, int N, int NTHREADS , Move movimiento, int mo
         delete[] movimientos->listaMovimientos;
         delete movimientos;
         atomicAdd(&evalesGPU[move_number], winner);
-        printf("evaluacion: %f\n", evalesGPU[move_number]);
    }
     
 }
@@ -94,28 +93,24 @@ int main(int argc, char** argv) {
         printf("Porfavor ingrese 4 parametros:\n N:(>=8) NTHREADS(>0) Verbose(0|1) CPUorGPU(0|1)");
     }
 
-    //int N = atoi(argv[1]);
-    int N =8;
-    //int NTHREADS = atoi(argv[2]);
-    int NTHREADS = 100;
-    //int verbose = atoi(argv[3]);
-    int verbose = 1;
-    //int CPUorGPU = atoi(argv[4]); //0 o 1 para CPU o GPU respectivamente
-    int CPUorGPU = 1;
+    int N = atoi(argv[1]);
+    int NTHREADS = atoi(argv[2]);
+    int verbose = atoi(argv[3]);
+    int CPUorGPU = atoi(argv[4]); //0 o 1 para CPU o GPU respectivamente
     
     int bs = 256;
     int gs = (int)ceil((float) NTHREADS / bs);
 
-    printf("%d %d\n", gs,bs);
-
     // Variables que trabajaremos 
-    int* board = new int[N*N];
+    short* board = new short[N*N];
     int n_fichas_player = 0;
     int n_fichas_IA = 0;
     char letras[] = {'A','B','C','D','E','F','G','H','K','L','M','N'};
     srand(time(NULL));
     float time = 0;
     clock_t t1, t2;
+
+
     
     //Construccion de tablero inicial
     build_board(board, N, &n_fichas_player, &n_fichas_IA);
@@ -172,45 +167,53 @@ int main(int argc, char** argv) {
             float* evaluacionGPU;
             cudaMalloc((void**)&evaluacionGPU, sizeof(float));
 
-            int* boardGPU;
+            short* boardGPU;
             cudaMalloc((void**)&boardGPU, N * N * sizeof(int));
             cudaMemcpy(boardGPU, board, N * N * sizeof(int), cudaMemcpyHostToDevice);
 
-            cudaEvent_t ct1, ct2;
             const int nstreams = 2;
             cudaStream_t streams[nstreams];
             int streamsize = movimientos->length/nstreams;
 
-            
-            
-            for(int i = 0; i < streamsize  ; i++){             
+            cudaEvent_t ct1, ct2;
+            float dt = 0;
+            cudaEventCreate(&ct1);
+            cudaEventCreate(&ct2);
+            for(int i = 0; i < streamsize  ; i++){   
+                cudaEventRecord(ct1);
                 for (int j = 0; j < nstreams; j++ ){
                     
                     *evaluacion = 0;
                     int move_number = j + i*nstreams;
                     cudaStreamCreate(&streams[j]);
-
+                    
                     cudaMemcpyAsync(evaluacionGPU, evaluacion,  sizeof(float), cudaMemcpyHostToDevice, streams[j]);
                     cudaMemcpyAsync(evalesGPU, evalesCPU,    movimientos->length * sizeof(float), cudaMemcpyHostToDevice, streams[j]);
                     kernel <<< gs, bs, 0, streams[j] >>> (boardGPU, N, NTHREADS, movimientos->listaMovimientos[move_number], move_number, /*start_position, end_position, kill,*/ n_fichas_player, n_fichas_IA, evaluacionGPU, evalesGPU);
                     cudaMemcpyAsync(evalesCPU, evalesGPU,  movimientos->length  * sizeof(float), cudaMemcpyDeviceToHost, streams[j]);
-                   
+                    
                 } 
-
                 cudaDeviceSynchronize();
-
-                //float ms = 1000.0 * (float)(t2 - t1) / CLOCKS_PER_SEC;
-                //time += ms;
-                
+                cudaEventRecord(ct2);
+                cudaEventSynchronize(ct2);
+                cudaEventElapsedTime(&dt, ct1, ct2);
+                printf("Tiempo 2 Streams: %f[ms]\n", dt); 
             }
 
             if(movimientos->length%nstreams != 0){
                 *evaluacion = 0;
                 int move_number = (movimientos->length)-1;
+                cudaEventRecord(ct1);
                 cudaMemcpy(evaluacionGPU, evaluacion, sizeof(float), cudaMemcpyHostToDevice);
                 cudaMemcpy(evalesGPU, evalesCPU, movimientos->length * sizeof(float), cudaMemcpyHostToDevice);
                 kernel <<< gs, bs>>> (boardGPU, N, NTHREADS, movimientos->listaMovimientos[move_number],  move_number, /* start_position, end_position, kill,*/ n_fichas_player, n_fichas_IA, evaluacionGPU, evalesGPU);
                 cudaMemcpy(evalesCPU, evalesGPU, movimientos->length * sizeof(int), cudaMemcpyDeviceToHost);
+                cudaDeviceSynchronize();
+
+                cudaEventRecord(ct2);
+                cudaEventSynchronize(ct2);
+                cudaEventElapsedTime(&dt, ct1, ct2);
+                printf("Tiempo 1 Stream: %f[ms]\n", dt); 
             }
 
             

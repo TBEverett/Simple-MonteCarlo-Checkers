@@ -16,7 +16,7 @@ struct Movimientos{
 };
 
 
-void build_board(int* board, int N, int *n_fichas_player, int*n_fichas_rival){ 
+void build_board(short* board, int N, int *n_fichas_player, int*n_fichas_rival){ 
     int filas_con_fichas = (N-2)/2;
     for (int i = 0; i < N*N; i++){
         board[i] = 0;
@@ -51,7 +51,7 @@ void build_board(int* board, int N, int *n_fichas_player, int*n_fichas_rival){
     }
 }
 
-void printBoard(int* board, int N){
+void printBoard(short* board, int N){
     char letras[] = {'A','B','C','D','E','F','G','H','K','L','M','N'};
     cout << "   ";
     for (int i = 0; i < N; i++){
@@ -70,7 +70,7 @@ void printBoard(int* board, int N){
 }
 
 //Funcion que retorna ganador
-__host__ __device__ float win(int *board, int N){
+__host__ __device__ float win(short* board, int N){
     for(int i = 0; i < N; i++){
        for(int j = 0; j < N; j++){
             if (board[i*N + j] == 2){
@@ -105,7 +105,7 @@ Move player_select_move(Movimientos* movimientos, int N){
 }
 
 //Función que ejecuta un movimiento sobre el tablero. Asume que el movimiento siempre es factible.
-__host__ __device__ void execute_movement(int* &board, int N, Move movimiento, int* n_fichas){
+__host__ __device__ void execute_movement(short* board, int N, Move movimiento, int* n_fichas){
     board[movimiento.end_position] = board[movimiento.start_position];
     board[movimiento.start_position] = 0;
     if (movimiento.kill != -1){
@@ -116,7 +116,7 @@ __host__ __device__ void execute_movement(int* &board, int N, Move movimiento, i
 
 
 //Función que retorna una lista con movimientos
-__host__ __device__ Movimientos* generarMovimientos(int* board, int N, int n_fichas, int ficha_aliada, Movimientos* movimientos){ //n_fichas (de 1 jugador) nos servirá para dejar de buscar cuando hayamos procesado todas las fichas
+__host__ __device__ Movimientos* generarMovimientos(short* board, int N, int n_fichas, int ficha_aliada, Movimientos* movimientos){ //n_fichas (de 1 jugador) nos servirá para dejar de buscar cuando hayamos procesado todas las fichas
     int colum;
 
     int aux_numero_fichas = n_fichas; //Acotamos la cantidad de movimientos (cantidad de fichas * 2)
@@ -201,10 +201,10 @@ __host__ __device__ Movimientos* generarMovimientos(int* board, int N, int n_fic
 }
 
 //Single Threaded Monte Carlo for Checkers
-float MonteCarloSimulation(int* board,int N,Move movimiento, int n_fichas_player, int n_fichas_IA){
+float MonteCarloSimulation(short* board,int N,Move movimiento, int n_fichas_player, int n_fichas_IA){
   
     //Creamos copia local del tablero
-    int* local_board = new int[N*N];
+    short* local_board = new short[N*N];
     for(int i = 0; i < N*N; i++) local_board[i] = board[i];
 
     //Aplicamos movimiento a tablero local
